@@ -1,5 +1,7 @@
 # pi-plugin-token-rate
 
+English | [简体中文](./README.zh-CN.md)
+
 An Oh My Pi / OMP extension that shows live assistant output speed while a response is streaming.
 
 ## Features

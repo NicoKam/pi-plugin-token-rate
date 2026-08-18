@@ -2,17 +2,18 @@
 
 English | [简体中文](./README.zh-CN.md)
 
-An Oh My Pi / OMP extension that shows live assistant output speed while a response is streaming.
+An Oh My Pi / OMP and upstream Pi extension that shows live assistant output speed while a response is streaming.
 
 ![Token rate indicator demo](./assets/demo.svg)
 
 ## Features
 
-- Displays live output rate every 500ms.
-- Shows `🚀` while streaming and `✅` after completion.
+- Displays a rolling two-second output rate every 500ms; each completed assistant message retains its last active rate and shows `🔄` until the next message produces output.
+- Shows `🔄` while the model is processing between assistant messages, `🚀` while streaming, and `✅` when the agent completes.
 - Uses a red → yellow → green truecolor gradient based on tok/s.
 - Keeps the indicator above the input box, separated from transcript content by one blank line.
 - Estimates output tokens locally from stream deltas with a CJK-aware chars-per-token heuristic.
+- Shows the estimated token count for the current response and the cumulative session total, formatted with thousands separators.
 
 ## Token counting accuracy
 
@@ -28,6 +29,10 @@ Current heuristic:
 The displayed tok/s is a UI speed indicator for live feedback, not a billing counter or billing-grade accounting source.
 
 Tested with OMP `17.3.5`.
+
+## Compatibility
+
+Compatible with OMP and upstream Pi. The extension uses their shared `ExtensionAPI`; its OMP type-only import is erased at runtime. The manifest declares both `omp.extensions` and `pi.extensions` for package discovery.
 
 ## Install
 
@@ -75,6 +80,23 @@ cp -R /path/to/pi-plugin-token-rate ~/.omp/agent/extensions/
 ```
 
 Restart `omp`.
+
+### Pi
+
+Load once:
+
+```bash
+pi --extension /path/to/pi-plugin-token-rate/index.ts
+```
+
+Or copy `index.ts` to Pi's user extension directory:
+
+```bash
+mkdir -p ~/.pi/agent/extensions
+cp /path/to/pi-plugin-token-rate/index.ts ~/.pi/agent/extensions/token-rate.ts
+```
+
+Restart `pi` after copying it.
 
 ## Development
 

@@ -4,5 +4,8 @@
   "private": true,
   "omp": {
     "extensions": ["./index.ts"]
+  },
+  "pi": {
+    "extensions": ["./index.ts"]
   }
 }

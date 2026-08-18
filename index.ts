@@ -17,8 +17,11 @@ import type { ExtensionAPI } from "@oh-my-pi/pi-coding-agent";
 
 const WIDGET_KEY = "token-rate";
 const REFRESH_MS = 500;
+const RATE_WINDOW_MS = 2_000;
 const LATIN_CHARS_PER_TOKEN = 4.0;
 const CJK_CHARS_PER_TOKEN = 1.4;
+
+type TokenSample = { timestamp: number; tokenCount: number };
 
 type Rgb = { r: number; g: number; b: number };
 
@@ -56,9 +59,16 @@ function colorForRate(tokPerSec: number): Rgb {
   return SPEED_COLOR_STOPS[SPEED_COLOR_STOPS.length - 1].color;
 }
 
-function formatRateLine(icon: string, tokPerSec: number, suffix: string): string {
-  const { r, g, b } = colorForRate(tokPerSec);
+
+function formatRateLine(
+  icon: string,
+  tokPerSec: number,
+  suffix: string,
+  useRateColor = true,
+): string {
   const text = `${icon} ${tokPerSec.toFixed(1)} tok/s ${suffix}`;
+  if (!useRateColor) return text;
+  const { r, g, b } = colorForRate(tokPerSec);
   return `\x1b[38;2;${r};${g};${b}m${text}\x1b[0m`;
 }
 
@@ -87,8 +97,12 @@ function estimateDeltaTokens(delta: string): number {
 
 export default function (pi: ExtensionAPI): void {
   let streaming = false;
+  let hasReceivedDelta = false;
   let startedAt = 0;
+  let lastActiveRate = 0;
   let tokenCount = 0;
+  let totalTokenCount = 0;
+  let tokenSamples: TokenSample[] = [];
   let timer: unknown = null;
 
   function clearTimer(ctx: { clearTimer: (t: unknown) => void }) {
@@ -104,27 +118,60 @@ export default function (pi: ExtensionAPI): void {
     ctx.ui.setWidget(WIDGET_KEY, undefined, { placement: "aboveEditor" });
   }
 
-  pi.on("message_start", async (event, ctx) => {
-    if (event.message.role !== "assistant") return;
-    // start of a new assistant stream
+  function calculateRecentRate(now: number): number {
+    const windowStart = now - RATE_WINDOW_MS;
+    tokenSamples = tokenSamples.filter(sample => sample.timestamp >= windowStart);
+    return (tokenSamples.reduce((total, sample) => total + sample.tokenCount, 0) / RATE_WINDOW_MS) * 1000;
+  }
+
+  pi.on("agent_start", async (_event, ctx) => {
     clearTimer(ctx);
     streaming = true;
+    hasReceivedDelta = false;
     startedAt = Date.now();
+    lastActiveRate = 0;
     tokenCount = 0;
+    tokenSamples = [];
+    ctx.ui.setWidget(
+      WIDGET_KEY,
+      ["", formatRateLine("🔄", 0, `(0 tok, total ${totalTokenCount.toLocaleString("en-US")} tok)`, false)],
+      { placement: "aboveEditor" },
+    );
 
     timer = ctx.setInterval(() => {
       if (!streaming) return;
       const elapsedMs = Date.now() - startedAt;
       if (elapsedMs <= 0) return;
-      const tokPerSec = (tokenCount / elapsedMs) * 1000;
       // leading "" → blank separator line above; no trailing blank line
       ctx.ui.setWidget(
         WIDGET_KEY,
-        ["", formatRateLine("🚀", tokPerSec, `(${tokenCount} tok)`)],
+        [
+          "",
+          formatRateLine(
+            hasReceivedDelta ? "🚀" : "🔄",
+            lastActiveRate,
+            `(${tokenCount.toLocaleString("en-US")} tok, total ${totalTokenCount.toLocaleString("en-US")} tok)`,
+            hasReceivedDelta,
+          ),
+        ],
         { placement: "aboveEditor" },
       );
     }, REFRESH_MS);
   });
+
+  pi.on("message_start", async (event) => {
+    if (event.message.role !== "assistant") return;
+    if (!streaming) {
+      // Fallback for runtimes that emit an assistant message without agent_start.
+      streaming = true;
+      startedAt = Date.now();
+      lastActiveRate = 0;
+      tokenCount = 0;
+      tokenSamples = [];
+    }
+    hasReceivedDelta = false;
+  });
+
 
   pi.on("message_update", async (event) => {
     if (!streaming) return;
@@ -140,21 +187,38 @@ export default function (pi: ExtensionAPI): void {
         return;
     }
     if (!delta) return;
+    hasReceivedDelta = true;
     // Industry-standard heuristic when no model tokenizer is available:
     // chars-per-token with a CJK-ratio adjustment.
-    tokenCount += estimateDeltaTokens(delta);
+    const estimatedTokens = estimateDeltaTokens(delta);
+    const timestamp = Date.now();
+    tokenCount += estimatedTokens;
+    totalTokenCount += estimatedTokens;
+    tokenSamples.push({ timestamp, tokenCount: estimatedTokens });
+    lastActiveRate = calculateRecentRate(timestamp);
   });
 
-  pi.on("message_end", async (event, ctx) => {
+  pi.on("message_end", async (event) => {
     if (event.message.role !== "assistant") return;
+    hasReceivedDelta = false;
+  });
+
+  pi.on("agent_end", async (_event, ctx) => {
     if (!streaming) return;
     clearTimer(ctx);
     streaming = false;
     const elapsedMs = Date.now() - startedAt;
-    const finalRate = elapsedMs > 0 ? (tokenCount / elapsedMs) * 1000 : 0;
+    const finalRate = lastActiveRate;
     ctx.ui.setWidget(
       WIDGET_KEY,
-      ["", formatRateLine("✅", finalRate, `(${tokenCount} tok, ${(elapsedMs / 1000).toFixed(1)}s)`)],
+      [
+        "",
+        formatRateLine(
+          "✅",
+          finalRate,
+          `(${tokenCount.toLocaleString("en-US")} tok, ${(elapsedMs / 1000).toFixed(1)}s, total ${totalTokenCount.toLocaleString("en-US")} tok)`,
+        ),
+      ],
       { placement: "aboveEditor" },
     );
   });

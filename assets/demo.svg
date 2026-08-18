@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200" viewBox="0 0 800 200" role="img" aria-label="pi-plugin-token-rate demo: completed output speed above the OMP input box">
+  <rect width="800" height="200" fill="#1f2227"/>
+  <g transform="translate(32 26)">
+    <rect x="0" y="0" width="52" height="52" rx="10" fill="#12c83f"/>
+    <text x="26" y="39" text-anchor="middle" font-size="40" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif" fill="#ffffff">✓</text>
+    <text x="76" y="41" font-size="42" font-family="SFMono-Regular, Menlo, Consolas, monospace" fill="#7ee84d" letter-spacing="2">65.2 tok/s (152 tok, 2.3s)</text>
+  </g>
+  <g transform="translate(14 101)">
+    <path d="M36 0 H80 V52 H36 Q14 52 14 30 V22 Q14 0 36 0 Z" fill="none" stroke="#74ff8a" stroke-width="3"/>
+    <rect x="80" y="30" width="26" height="51" fill="#7fb4d2"/>
+    <text x="108" y="19" font-size="42" font-family="SFMono-Regular, Menlo, Consolas, monospace" fill="#1db9ff">π</text>
+    <text x="186" y="19" font-size="36" font-family="SFMono-Regular, Menlo, Consolas, monospace" fill="#444a52">&gt;</text>
+    <circle cx="250" cy="4" r="14" fill="#17bfff"/>
+    <text x="286" y="19" font-size="40" font-family="SFMono-Regular, Menlo, Consolas, monospace" fill="#22bfff">GPT 5.5 · ◒ high &gt;</text>
+  </g>
+</svg>

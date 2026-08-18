@@ -4,6 +4,8 @@
 
 一个 Oh My Pi / OMP 扩展，用于在 AI 回答流式输出时展示实时输出速度。
 
+![Token rate indicator demo](./assets/demo.svg)
+
 ## 功能
 
 - 每 500ms 刷新一次输出速率。

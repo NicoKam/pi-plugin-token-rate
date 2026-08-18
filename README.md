@@ -4,6 +4,8 @@ English | [简体中文](./README.zh-CN.md)
 
 An Oh My Pi / OMP extension that shows live assistant output speed while a response is streaming.
 
+![Token rate indicator demo](./assets/demo.svg)
+
 ## Features
 
 - Displays live output rate every 500ms.

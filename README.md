@@ -25,11 +25,20 @@ Current heuristic:
 - Whitespace is ignored.
 - Mixed text is weighted by CJK character ratio.
 
-The displayed tok/s is suitable for live UX feedback, not billing-grade accounting.
+The displayed tok/s is a UI speed indicator for live feedback, not a billing counter or billing-grade accounting source.
+
+Tested with OMP `17.3.5`.
 
 ## Install
 
-### Option 1: load once
+### Option 1: clone and load once
+
+```bash
+git clone https://github.com/NicoKam/pi-plugin-token-rate.git
+omp --extension ./pi-plugin-token-rate
+```
+
+### Option 2: load an existing local copy
 
 From any directory:
 
@@ -37,7 +46,7 @@ From any directory:
 omp --extension /path/to/pi-plugin-token-rate
 ```
 
-### Option 2: persistent config
+### Option 3: persistent config
 
 Add the plugin path to `~/.omp/agent/config.yml`:
 
@@ -56,7 +65,7 @@ extensions:
 
 Restart `omp` after changing the config.
 
-### Option 3: automatic discovery
+### Option 4: automatic discovery
 
 Copy the plugin into OMP's user extension directory:
 

@@ -25,11 +25,20 @@
 - 空白字符不计入有效字符
 - 中英混合文本按 CJK 字符占比加权
 
-展示的 tok/s 适合用作实时体验反馈，不适合作为计费级精确统计。
+展示的 tok/s 定位是实时 UI 速率反馈，不是 billing counter，也不适合作为计费级精确统计来源。
+
+已在 OMP `17.3.5` 验证。
 
 ## 安装
 
-### 方式 1：单次加载
+### 方式 1：克隆并单次加载
+
+```bash
+git clone https://github.com/NicoKam/pi-plugin-token-rate.git
+omp --extension ./pi-plugin-token-rate
+```
+
+### 方式 2：加载已有本地副本
 
 在任意目录执行：
 
@@ -37,7 +46,7 @@
 omp --extension /path/to/pi-plugin-token-rate
 ```
 
-### 方式 2：持久配置
+### 方式 3：持久配置
 
 把插件路径加入 `~/.omp/agent/config.yml`：
 
@@ -56,7 +65,7 @@ extensions:
 
 修改配置后重启 `omp`。
 
-### 方式 3：自动发现
+### 方式 4：自动发现
 
 复制插件到 OMP 用户扩展目录：
 
